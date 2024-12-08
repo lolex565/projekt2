@@ -9,104 +9,164 @@ import (
 )
 
 // LoadGraphFromFile wczytuje graf z pliku tekstowego o podanej ścieżce.
-// Plik musi mieć na pierwszej linii liczbę wierzchołków, a na kolejnych liniach macierz sąsiedztwa.
-// `useTabsAsSeparator` - jeśli true, używa tabów jako separatorów wartości, domyślnie spacje.
-func LoadGraphFromFile(filePath string, graph *AdjMatrixGraph, useTabsAsSeparator ...bool) error {
-	// Domyślnie ustawienia: spacje jako separator
-	separator := " "
-
-	// Jeśli podano parametr `useTabsAsSeparator` i jest ustawiony na true, zmieniamy separator
-	if len(useTabsAsSeparator) > 0 && useTabsAsSeparator[0] {
-		separator = "\t"
-	}
-
-	// Otwórz plik
+// Jeśli isATSP = true, próbuje wczytać plik w formacie ATSP (EXPLICIT, FULL_MATRIX).
+// W przeciwnym wypadku oczekuje formatu:
+// - w pierwszej linii: liczba wierzchołków
+// - w kolejnych liniach: macierz n x n
+// Funkcja poprawnie interpretuje wielokrotne spacje jako separator.
+func LoadGraphFromFile(filePath string, graph *AdjMatrixGraph, isATSP ...bool) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	// Buforowane czytanie pliku
 	scanner := bufio.NewScanner(file)
 
-	// Odczytaj liczbę wierzchołków (pierwsza linia)
-	if !scanner.Scan() {
-		return errors.New("plik jest pusty lub uszkodzony")
-	}
-	vertexCount, err := strconv.Atoi(scanner.Text())
-	if err != nil {
-		return errors.New("błąd podczas odczytu liczby wierzchołków")
-	}
+	if len(isATSP) > 0 && isATSP[0] {
+		// Wczytywanie formatu ATSP
+		var dimension int
+		inMatrixSection := false
 
-	// Inicjalizacja grafu
-	graph.vertexCount = vertexCount
-	graph.adjMatrix = make([][]int, vertexCount)
-	for i := 0; i < vertexCount; i++ {
-		graph.adjMatrix[i] = make([]int, vertexCount)
-	}
+		// Tablica do której wczytamy wszystkie liczby z sekcji EDGE_WEIGHT_SECTION
+		var allNumbers []int
 
-	// Odczytuj kolejne wiersze macierzy sąsiedztwa
-	row := 0
-	for scanner.Scan() {
-		line := scanner.Text()
-		// Dziel linię według separatora (spacja lub tab)
-		values := strings.Split(line, separator)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
 
-		if len(values) != vertexCount {
-			return errors.New("niewłaściwa liczba elementów w wierszu macierzy sąsiedztwa")
-		}
-
-		// Przetwórz wartości w wierszu
-		for col, value := range values {
-			weight, err := strconv.Atoi(value)
-			if err != nil {
-				return errors.New("błąd podczas konwersji wartości macierzy do liczby całkowitej")
+			// Szukamy wymiaru grafu w linii zawierającej "DIMENSION:"
+			if strings.HasPrefix(line, "DIMENSION:") {
+				parts := strings.Split(line, ":")
+				if len(parts) == 2 {
+					dimStr := strings.TrimSpace(parts[1])
+					dimension, err = strconv.Atoi(dimStr)
+					if err != nil {
+						return errors.New("błąd przy konwersji wymiaru z pliku ATSP")
+					}
+				}
 			}
-			graph.adjMatrix[row][col] = weight
+
+			// Szukamy sekcji z wagami
+			if strings.HasPrefix(line, "EDGE_WEIGHT_SECTION") {
+				inMatrixSection = true
+				continue
+			}
+
+			// Jeśli jesteśmy w sekcji z macierzą
+			if inMatrixSection {
+				// Wczytujemy wszystkie liczby do jednej tablicy
+				if line != "" {
+					values := strings.Fields(line)
+					for _, val := range values {
+						num, err := strconv.Atoi(val)
+						if err != nil {
+							return errors.New("błąd konwersji wartości w macierzy ATSP")
+						}
+						allNumbers = append(allNumbers, num)
+					}
+				}
+
+				// Jeżeli mamy już wystarczającą liczbę elementów do zapełnienia macierzy dimension x dimension, możemy przerwać
+				if dimension > 0 && len(allNumbers) >= dimension*dimension {
+					break
+				}
+			}
 		}
-		row++
-	}
 
-	if row != vertexCount {
-		return errors.New("niewłaściwa liczba wierszy w macierzy sąsiedztwa")
-	}
+		if dimension == 0 {
+			return errors.New("nie znaleziono wymiaru w pliku ATSP")
+		}
+		if len(allNumbers) < dimension*dimension {
+			return errors.New("zbyt mało danych w sekcji EDGE_WEIGHT_SECTION aby uzupełnić macierz")
+		}
 
-	return nil
+		// Inicjalizacja grafu
+		graph.vertexCount = dimension
+		graph.adjMatrix = make([][]int, dimension)
+		for i := 0; i < dimension; i++ {
+			graph.adjMatrix[i] = make([]int, dimension)
+		}
+
+		// Uzupełnienie macierzy z tablicy allNumbers
+		idx := 0
+		for i := 0; i < dimension; i++ {
+			for j := 0; j < dimension; j++ {
+				graph.adjMatrix[i][j] = allNumbers[idx]
+				idx++
+			}
+		}
+
+		return nil
+	} else {
+		// Wczytywanie standardowego formatu
+		if !scanner.Scan() {
+			return errors.New("plik jest pusty lub nieprawidłowy")
+		}
+		firstLine := strings.TrimSpace(scanner.Text())
+		vertexCount, err := strconv.Atoi(firstLine)
+		if err != nil {
+			return errors.New("błąd podczas odczytu liczby wierzchołków")
+		}
+
+		graph.vertexCount = vertexCount
+		graph.adjMatrix = make([][]int, vertexCount)
+		for i := 0; i < vertexCount; i++ {
+			graph.adjMatrix[i] = make([]int, vertexCount)
+		}
+
+		row := 0
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if line == "" {
+				continue
+			}
+			values := strings.Fields(line)
+			if len(values) != vertexCount {
+				return errors.New("niewłaściwa liczba elementów w wierszu macierzy")
+			}
+			for j, val := range values {
+				num, err := strconv.Atoi(val)
+				if err != nil {
+					return errors.New("błąd przy konwersji wartości macierzy do liczby całkowitej")
+				}
+				graph.adjMatrix[row][j] = num
+			}
+			row++
+			if row == vertexCount {
+				break
+			}
+		}
+
+		if row != vertexCount {
+			return errors.New("niewłaściwa liczba wierszy w macierzy sąsiedztwa")
+		}
+		return nil
+	}
 }
 
-// SaveGraphToFile zapisuje graf do pliku tekstowego o podanej ścieżce.
-// Pierwsza linia zawiera liczbę wierzchołków, a kolejne linie zawierają macierz sąsiedztwa.
-// `useTabsAsSeparator` - jeśli true, używa tabów jako separatorów wartości, domyślnie spacje.
+// SaveGraphToFile zapisuje graf do pliku w formacie:
+// Pierwsza linia: liczba wierzchołków
+// Kolejne linie: macierz n x n
+// Jeśli useTabsAsSeparator = true, wartości oddzielone tabulatorami, w przeciwnym wypadku spacjami.
 func SaveGraphToFile(g Graph, filePath string, useTabsAsSeparator ...bool) error {
-	// Domyślnie ustawienia: spacje jako separator
 	separator := " "
-
-	// Jeśli podano parametr `useTabsAsSeparator` i jest ustawiony na true, zmieniamy separator
 	if len(useTabsAsSeparator) > 0 && useTabsAsSeparator[0] {
 		separator = "\t"
 	}
 
-	// Utwórz lub otwórz plik do zapisu
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	// Strings.Builder do buforowania danych przed zapisem do pliku
 	var out strings.Builder
-
-	// Zapisz liczbę wierzchołków
 	out.WriteString(strconv.Itoa(g.GetVertexCount()) + "\n")
 
-	// Zapisz macierz sąsiedztwa
 	for i := 0; i < g.GetVertexCount(); i++ {
 		for j := 0; j < g.GetVertexCount(); j++ {
-			// Pobierz wagę krawędzi między wierzchołkami i, j
 			edge := g.GetEdge(i, j)
 			out.WriteString(strconv.Itoa(edge.Weight))
-			// Dodaj separator między wartościami, oprócz ostatniej w wierszu
 			if j < g.GetVertexCount()-1 {
 				out.WriteString(separator)
 			}
@@ -114,7 +174,6 @@ func SaveGraphToFile(g Graph, filePath string, useTabsAsSeparator ...bool) error
 		out.WriteString("\n")
 	}
 
-	// Zapisz zawartość do pliku
 	_, err = file.WriteString(out.String())
 	if err != nil {
 		return err
