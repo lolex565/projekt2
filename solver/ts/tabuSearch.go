@@ -127,7 +127,7 @@ func (t *TsATSPSolver) Solve() ([]int, int) {
 		if t.timeout != -1 {
 			elapsed := time.Since(t.startTime).Nanoseconds()
 			if elapsed >= t.timeout {
-				log.Println("Przekroczono limit czasu. Kończenie algorytmu Tabu Search.")
+				log.Println("Zatrzymano przy iteracji:", iteration, "z powodu przekroczenia limitu czasu.")
 				break
 			}
 		}
