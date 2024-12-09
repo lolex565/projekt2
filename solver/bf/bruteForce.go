@@ -11,9 +11,8 @@ type BFATSPSolver struct {
 	startVertex int
 }
 
-func NewBruteForceATSPSolver(g graph.Graph, sv int) *BFATSPSolver {
-	return &BFATSPSolver{
-		graph:       g,
+func NewBruteForceATSPSolver(sv int) BFATSPSolver {
+	return BFATSPSolver{
 		startVertex: sv,
 	}
 }

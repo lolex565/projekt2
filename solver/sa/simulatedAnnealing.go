@@ -46,8 +46,8 @@ func (s *SaATSPSolver) GetTimeout() int64 {
 }
 
 // NewSimulatedAnnealingATSPSolver tworzy nowy solver
-func NewSimulatedAnnealingATSPSolver(initialTemperature float64, minimalTemperature float64, alpha float64, iterations int, timeout int64) *SaATSPSolver {
-	return &SaATSPSolver{
+func NewSimulatedAnnealingATSPSolver(initialTemperature float64, minimalTemperature float64, alpha float64, iterations int, timeout int64) SaATSPSolver {
+	return SaATSPSolver{
 		initialTemperature: initialTemperature,
 		minimalTemperature: minimalTemperature,
 		alpha:              alpha,

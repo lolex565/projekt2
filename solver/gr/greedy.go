@@ -9,9 +9,8 @@ type GRATSPSolver struct {
 	startVertex int
 }
 
-func NewGreedyATSPSolver(g graph.Graph, sv int) *GRATSPSolver {
-	return &GRATSPSolver{
-		graph:       g,
+func NewGreedyATSPSolver(sv int) GRATSPSolver {
+	return GRATSPSolver{
 		startVertex: sv,
 	}
 }

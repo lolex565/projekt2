@@ -11,9 +11,8 @@ type DPATSPSolver struct {
 	startVertex int
 }
 
-func NewDynamicProgrammingATSPSolver(g graph.Graph, sv int) *DPATSPSolver {
-	return &DPATSPSolver{
-		graph:       g,
+func NewDynamicProgrammingATSPSolver(sv int) DPATSPSolver {
+	return DPATSPSolver{
 		startVertex: sv,
 	}
 }

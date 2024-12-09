@@ -45,8 +45,8 @@ func (t *TsATSPSolver) GetTimeout() int64 {
 // iterations - maksymalna liczba iteracji
 // timeout - limit czasu w nanosekundach (-1 oznacza brak limitu)
 // tabuTenure - ile iteracji dany ruch pozostaje tabu
-func NewTabuSearchATSPSolver(iterations int, timeout int64, tabuTenure int) *TsATSPSolver {
-	return &TsATSPSolver{
+func NewTabuSearchATSPSolver(iterations int, timeout int64, tabuTenure int) TsATSPSolver {
+	return TsATSPSolver{
 		iterations: iterations,
 		timeout:    timeout,
 		tabuTenure: tabuTenure,

@@ -11,9 +11,8 @@ type BNBATSPSolver struct {
 	startVertex int
 }
 
-func NewBranchAndBoundATSPSolver(g graph.Graph, sv int) *BNBATSPSolver {
-	return &BNBATSPSolver{
-		graph:       g,
+func NewBranchAndBoundATSPSolver(sv int) BNBATSPSolver {
+	return BNBATSPSolver{
 		startVertex: sv,
 	}
 }

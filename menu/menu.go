@@ -11,12 +11,12 @@ import (
 )
 
 type Menu struct {
-	bfATSPSolver  *bf.BFATSPSolver
-	bnbATSPSolver *bnb.BNBATSPSolver
-	dpATSPSolver  *dp.DPATSPSolver
-	grATSPSolver  *gr.GRATSPSolver
-	saATSPSolver  *sa.SaATSPSolver
-	tsATSPSolver  *ts.TsATSPSolver
+	bfATSPSolver  bf.BFATSPSolver
+	bnbATSPSolver bnb.BNBATSPSolver
+	dpATSPSolver  dp.DPATSPSolver
+	grATSPSolver  gr.GRATSPSolver
+	saATSPSolver  sa.SaATSPSolver
+	tsATSPSolver  ts.TsATSPSolver
 	graph         graph.Graph
 }
 
@@ -106,12 +106,6 @@ func NewMenu() *Menu {
 
 func NewDefaultMenu(g graph.Graph) *Menu {
 	return &Menu{
-		graph:         g,
-		bfATSPSolver:  bf.NewBruteForceATSPSolver(g, 0),
-		bnbATSPSolver: bnb.NewBranchAndBoundATSPSolver(g, 0),
-		dpATSPSolver:  dp.NewDynamicProgrammingATSPSolver(g, 0),
-		grATSPSolver:  gr.NewGreedyATSPSolver(g, 0),
-		saATSPSolver:  sa.NewSimulatedAnnealingATSPSolver(5000, 1e-6, 0.99995, 100000, 600000000000),
-		tsATSPSolver:  ts.NewTabuSearchATSPSolver(1000000, 600000000000, 10),
+		graph: g,
 	}
 }
