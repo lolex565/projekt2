@@ -1,10 +1,19 @@
 package gr
 
-import "projekt2/graph"
+import (
+	"projekt2/graph"
+)
 
 type GRATSPSolver struct {
 	graph       graph.Graph
 	startVertex int
+}
+
+func NewGreedyATSPSolver(g graph.Graph, sv int) *GRATSPSolver {
+	return &GRATSPSolver{
+		graph:       g,
+		startVertex: sv,
+	}
 }
 
 func (g *GRATSPSolver) SetGraph(graph graph.Graph) {

@@ -11,6 +11,13 @@ type DPATSPSolver struct {
 	startVertex int
 }
 
+func NewDynamicProgrammingATSPSolver(g graph.Graph, sv int) *DPATSPSolver {
+	return &DPATSPSolver{
+		graph:       g,
+		startVertex: sv,
+	}
+}
+
 func (d *DPATSPSolver) SetGraph(graph graph.Graph) {
 	d.graph = graph
 }

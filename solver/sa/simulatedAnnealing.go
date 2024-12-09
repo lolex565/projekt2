@@ -5,12 +5,11 @@ import (
 	"math"
 	"math/rand"
 	"projekt2/graph"
-	"projekt2/solver"
 	"time"
 )
 
-// SimulatedAnnealingATSPSolver implementuje interfejs ATSPSolver
-type SimulatedAnnealingATSPSolver struct {
+// SaATSPSolver implementuje interfejs ATSPSolver
+type SaATSPSolver struct {
 	graph              graph.Graph
 	startVertex        int
 	initialTemperature float64   // Początkowa temperatura
@@ -22,33 +21,33 @@ type SimulatedAnnealingATSPSolver struct {
 }
 
 // SetGraph ustawia graf dla solvera
-func (s *SimulatedAnnealingATSPSolver) SetGraph(g graph.Graph) {
+func (s *SaATSPSolver) SetGraph(g graph.Graph) {
 	s.graph = g
 }
 
 // GetGraph zwraca przypisany graf
-func (s *SimulatedAnnealingATSPSolver) GetGraph() graph.Graph {
+func (s *SaATSPSolver) GetGraph() graph.Graph {
 	return s.graph
 }
 
 // SetStartVertex ustawia wierzchołek startowy
-func (s *SimulatedAnnealingATSPSolver) SetStartVertex(startVertex int) {
+func (s *SaATSPSolver) SetStartVertex(startVertex int) {
 	s.startVertex = startVertex
 }
 
 // SetTimeout ustawia czas wykonania w sekundach
-func (s *SimulatedAnnealingATSPSolver) SetTimeout(timeout int64) {
+func (s *SaATSPSolver) SetTimeout(timeout int64) {
 	s.timeout = timeout
 }
 
 // GetTimeout zwraca czas wykonania w sekundach
-func (s *SimulatedAnnealingATSPSolver) GetTimeout() int64 {
+func (s *SaATSPSolver) GetTimeout() int64 {
 	return s.timeout
 }
 
 // NewSimulatedAnnealingATSPSolver tworzy nowy solver
-func NewSimulatedAnnealingATSPSolver(initialTemperature float64, minimalTemperature float64, alpha float64, iterations int, timeout int64) solver.ATSPSolver {
-	return &SimulatedAnnealingATSPSolver{
+func NewSimulatedAnnealingATSPSolver(initialTemperature float64, minimalTemperature float64, alpha float64, iterations int, timeout int64) *SaATSPSolver {
+	return &SaATSPSolver{
 		initialTemperature: initialTemperature,
 		minimalTemperature: minimalTemperature,
 		alpha:              alpha,
@@ -59,12 +58,12 @@ func NewSimulatedAnnealingATSPSolver(initialTemperature float64, minimalTemperat
 
 // calculateCost oblicza koszt danej ścieżki w grafie, wliczając powrót do startu
 // Zakłada, że path już kończy się na startVertex, więc nie dodaje go ponownie.
-func (s *SimulatedAnnealingATSPSolver) calculateCost(path []int) int {
+func (s *SaATSPSolver) calculateCost(path []int) int {
 	return s.graph.CalculatePathWeight(path)
 }
 
 // getNeighbor generuje sąsiednie rozwiązanie poprzez zamianę pozycji dwóch wierzchołków (oprócz startVertex na początku i końca)
-func (s *SimulatedAnnealingATSPSolver) getNeighbor(currentPath []int) []int {
+func (s *SaATSPSolver) getNeighbor(currentPath []int) []int {
 	vertexCount := len(currentPath)
 	if vertexCount <= 3 {
 		// Jeżeli jest tylko start i jeden inny wierzchołek, lub tylko startVertex na początku i końcu
@@ -88,12 +87,12 @@ func (s *SimulatedAnnealingATSPSolver) getNeighbor(currentPath []int) []int {
 }
 
 // acceptanceProbability oblicza prawdopodobieństwo przyjęcia gorszego rozwiązania
-func (s *SimulatedAnnealingATSPSolver) acceptanceProbability(delta int, temperature float64) float64 {
+func (s *SaATSPSolver) acceptanceProbability(delta int, temperature float64) float64 {
 	return math.Exp(-float64(delta) / temperature)
 }
 
 // Solve rozwiązuje ATSP metodą Symulowanego Wyżarzania
-func (s *SimulatedAnnealingATSPSolver) Solve() ([]int, int) {
+func (s *SaATSPSolver) Solve() ([]int, int) {
 	vertexCount := s.graph.GetVertexCount()
 	if vertexCount == 0 {
 		return nil, -1

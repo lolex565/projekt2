@@ -4,11 +4,10 @@ import (
 	"log"
 	"math"
 	"projekt2/graph"
-	"projekt2/solver"
 	"time"
 )
 
-type TabuSearchATSPSolver struct {
+type TsATSPSolver struct {
 	graph       graph.Graph
 	startVertex int
 	iterations  int   // maksymalna liczba iteracji
@@ -18,27 +17,27 @@ type TabuSearchATSPSolver struct {
 }
 
 // SetGraph ustawia graf dla solvera
-func (t *TabuSearchATSPSolver) SetGraph(g graph.Graph) {
+func (t *TsATSPSolver) SetGraph(g graph.Graph) {
 	t.graph = g
 }
 
 // GetGraph zwraca przypisany graf
-func (t *TabuSearchATSPSolver) GetGraph() graph.Graph {
+func (t *TsATSPSolver) GetGraph() graph.Graph {
 	return t.graph
 }
 
 // SetStartVertex ustawia wierzchołek startowy
-func (t *TabuSearchATSPSolver) SetStartVertex(startVertex int) {
+func (t *TsATSPSolver) SetStartVertex(startVertex int) {
 	t.startVertex = startVertex
 }
 
 // SetTimeout ustawia czas wykonania w nanosekundach, np. 1s = 1e9 ns
-func (t *TabuSearchATSPSolver) SetTimeout(timeout int64) {
+func (t *TsATSPSolver) SetTimeout(timeout int64) {
 	t.timeout = timeout
 }
 
 // GetTimeout zwraca aktualnie ustawiony czas wykonania
-func (t *TabuSearchATSPSolver) GetTimeout() int64 {
+func (t *TsATSPSolver) GetTimeout() int64 {
 	return t.timeout
 }
 
@@ -46,8 +45,8 @@ func (t *TabuSearchATSPSolver) GetTimeout() int64 {
 // iterations - maksymalna liczba iteracji
 // timeout - limit czasu w nanosekundach (-1 oznacza brak limitu)
 // tabuTenure - ile iteracji dany ruch pozostaje tabu
-func NewTabuSearchATSPSolver(iterations int, timeout int64, tabuTenure int) solver.ATSPSolver {
-	return &TabuSearchATSPSolver{
+func NewTabuSearchATSPSolver(iterations int, timeout int64, tabuTenure int) *TsATSPSolver {
+	return &TsATSPSolver{
 		iterations: iterations,
 		timeout:    timeout,
 		tabuTenure: tabuTenure,
@@ -55,12 +54,12 @@ func NewTabuSearchATSPSolver(iterations int, timeout int64, tabuTenure int) solv
 }
 
 // calculateCost oblicza koszt ścieżki, zakładając, że path już kończy się na startVertex
-func (t *TabuSearchATSPSolver) calculateCost(path []int) int {
+func (t *TsATSPSolver) calculateCost(path []int) int {
 	return t.graph.CalculatePathWeight(path)
 }
 
 // getAllNeighbors generuje wszystkie sąsiednie rozwiązania poprzez zamianę dwóch wierzchołków (oprócz startVertex na początku i końcu)
-func (t *TabuSearchATSPSolver) getAllNeighbors(currentPath []int) []struct {
+func (t *TsATSPSolver) getAllNeighbors(currentPath []int) []struct {
 	path []int
 	i, j int
 	cost int
@@ -97,7 +96,7 @@ func (t *TabuSearchATSPSolver) getAllNeighbors(currentPath []int) []struct {
 }
 
 // Solve - implementacja metody rozwiązywania problemu ATSP przy użyciu Tabu Search
-func (t *TabuSearchATSPSolver) Solve() ([]int, int) {
+func (t *TsATSPSolver) Solve() ([]int, int) {
 	vertexCount := t.graph.GetVertexCount()
 	if vertexCount == 0 {
 		return nil, -1
