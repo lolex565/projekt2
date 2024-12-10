@@ -33,6 +33,7 @@ func runSingleGraphMinTempTuning(g graph.Graph, minTemps []float64, timeoutInNs 
 	for i, minTemp := range minTemps {
 		saSolver := sa.NewSimulatedAnnealingATSPSolver(10000, minTemp, 0.995, 1000, timeoutInNs)
 		saSolver.SetGraph(g)
+		saSolver.SetStartVertex(0)
 		for j := 0; j < 10; j++ {
 			start := time.Now()
 			_, weight := saSolver.Solve()

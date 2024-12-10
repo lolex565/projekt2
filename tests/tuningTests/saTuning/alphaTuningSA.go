@@ -33,6 +33,7 @@ func runSingleGraphAlphaTuning(g graph.Graph, alphas []float64, timeoutInNs int6
 	for i, alpha := range alphas {
 		saSolver := sa.NewSimulatedAnnealingATSPSolver(10000, 1e-9, alpha, 1000, timeoutInNs)
 		saSolver.SetGraph(g)
+		saSolver.SetStartVertex(0)
 		for j := 0; j < 10; j++ {
 			start := time.Now()
 			_, weight := saSolver.Solve()

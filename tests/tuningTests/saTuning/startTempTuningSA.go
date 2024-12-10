@@ -13,7 +13,7 @@ import (
 
 func RunInitialTempTuningSA() {
 	smallGraph, mediumGraph, largeGraph := tests.LoadTestGraphs()
-	initTemps := []float64{1e3, 1e6, 1e9}
+	initTemps := []float64{1000, 1000000, 1000000000}
 	timeoutInNs := utils.MinutesToNanoSeconds(2)
 	runSingleGraphMinTempTuning(smallGraph, initTemps, timeoutInNs, "sa_init_temp_small_")
 	runSingleGraphMinTempTuning(mediumGraph, initTemps, timeoutInNs, "sa_init_temp_medium_")
@@ -33,6 +33,7 @@ func runSingleGraphInitialTempTuning(g graph.Graph, initTemps []float64, timeout
 	for i, initTemp := range initTemps {
 		saSolver := sa.NewSimulatedAnnealingATSPSolver(initTemp, 1e-9, 0.995, 1000, timeoutInNs)
 		saSolver.SetGraph(g)
+		saSolver.SetStartVertex(0)
 		for j := 0; j < 10; j++ {
 			start := time.Now()
 			_, weight := saSolver.Solve()

@@ -13,7 +13,6 @@ const (
 	NeighborhoodInsert = "insert"
 )
 
-// TsATSPSolver struktura solvera Tabu Search
 type TsATSPSolver struct {
 	graph              graph.Graph
 	startVertex        int
@@ -24,32 +23,26 @@ type TsATSPSolver struct {
 	neighborhoodMethod string // Metoda sąsiedztwa: "swap" lub "insert"
 }
 
-// SetGraph ustawia graf dla solvera
 func (t *TsATSPSolver) SetGraph(g graph.Graph) {
 	t.graph = g
 }
 
-// GetGraph zwraca przypisany graf
 func (t *TsATSPSolver) GetGraph() graph.Graph {
 	return t.graph
 }
 
-// SetStartVertex ustawia wierzchołek startowy
 func (t *TsATSPSolver) SetStartVertex(startVertex int) {
 	t.startVertex = startVertex
 }
 
-// SetTimeout ustawia czas wykonania w nanosekundach, np. 1s = 1e9 ns
 func (t *TsATSPSolver) SetTimeout(timeout int64) {
 	t.timeout = timeout
 }
 
-// GetTimeout zwraca aktualnie ustawiony czas wykonania
 func (t *TsATSPSolver) GetTimeout() int64 {
 	return t.timeout
 }
 
-// SetNeighborhoodMethod ustawia metodę sąsiedztwa
 func (t *TsATSPSolver) SetNeighborhoodMethod(method string) error {
 	if method != NeighborhoodSwap && method != NeighborhoodInsert {
 		return fmt.Errorf("nieprawidłowa metoda sąsiedztwa: %s", method)
@@ -58,145 +51,155 @@ func (t *TsATSPSolver) SetNeighborhoodMethod(method string) error {
 	return nil
 }
 
-// GetNeighborhoodMethod zwraca aktualnie ustawioną metodę sąsiedztwa
 func (t *TsATSPSolver) GetNeighborhoodMethod() string {
 	return t.neighborhoodMethod
 }
 
-// NewTabuSearchATSPSolver tworzy nowy solver Tabu Search z podanymi parametrami
-// iterations - maksymalna liczba iteracji
-// timeout - limit czasu w nanosekundach (-1 oznacza brak limitu)
-// tabuTenure - ile iteracji ruch pozostaje tabu
-// neighborhoodMethod - metoda sąsiedztwa: "swap" lub "insert"
 func NewTabuSearchATSPSolver(iterations int, timeout int64, tabuTenure int, neighborhoodMethod string) TsATSPSolver {
 	solver := TsATSPSolver{
 		iterations: iterations,
 		timeout:    timeout,
 		tabuTenure: tabuTenure,
 	}
-
-	// Ustawienie metody sąsiedztwa za pomocą SetNeighborhoodMethod
 	if err := solver.SetNeighborhoodMethod(neighborhoodMethod); err != nil {
 		log.Printf("Nieprawidłowa metoda sąsiedztwa: %s. Użyto domyślnej metody '%s'.\n", neighborhoodMethod, NeighborhoodSwap)
 		solver.neighborhoodMethod = NeighborhoodSwap
 	}
-
 	return solver
 }
 
-// calculateCost oblicza koszt ścieżki, zakładając, że path już kończy się na startVertex
+// calculateCost oblicza koszt danej ścieżki
 func (t *TsATSPSolver) calculateCost(path []int) int {
 	return t.graph.CalculatePathWeight(path)
 }
 
-// getAllNeighbors generuje wszystkie sąsiednie rozwiązania na podstawie wybranej metody sąsiedztwa
-func (t *TsATSPSolver) getAllNeighbors(currentPath []int) []struct {
-	path []int
-	i, j int
-	cost int
-} {
-	vertexCount := len(currentPath)
-	neighbors := []struct {
-		path []int
-		i, j int
-		cost int
-	}{}
-
-	if vertexCount <= 3 {
-		// Brak sensownych sąsiadów, bo tylko start, jeden wierzchołek i start
-		return neighbors
-	}
+// findBestNeighbor znajduje najlepszego sąsiada (zgodnie z metodą sąsiedztwa) bez tworzenia pełnej listy
+func (t *TsATSPSolver) findBestNeighbor(currentSolution []int, tabuList [][]int, bestCost int) (bestPath []int, bestI, bestJ, bestNeighborCost int) {
+	vertexCount := len(currentSolution)
+	bestNeighborCost = math.MaxInt32
 
 	switch t.neighborhoodMethod {
 	case NeighborhoodSwap:
-		for i := 1; i < vertexCount-1; i++ {
-			for j := i + 1; j < vertexCount-1; j++ {
-				newPath := make([]int, vertexCount)
-				copy(newPath, currentPath)
-				// Zamiana dwóch wierzchołków
-				newPath[i], newPath[j] = newPath[j], newPath[i]
+		// Swap: zamiana par wierzchołków
+		for i := 1; i < vertexCount-2; i++ {
+			for j := i + 1; j < vertexCount-2; j++ {
+				// Zamiana
+				currentSolution[i], currentSolution[j] = currentSolution[j], currentSolution[i]
 
-				c := t.calculateCost(newPath)
-				neighbors = append(neighbors, struct {
-					path []int
-					i, j int
-					cost int
-				}{path: newPath, i: i, j: j, cost: c})
+				cost := t.calculateCost(currentSolution)
+				isTabu := (tabuList[i][j] > 0 || tabuList[j][i] > 0)
+				// Warunek aspiracji lub nie-tabu
+				if cost < bestNeighborCost && (!isTabu || cost < bestCost) {
+					bestNeighborCost = cost
+					// Kopiujemy ścieżkę tylko kiedy jest to potrzebne (najlepszy dotąd)
+					if bestPath == nil {
+						bestPath = make([]int, vertexCount)
+					}
+					copy(bestPath, currentSolution)
+					bestI, bestJ = i, j
+				}
+
+				// Cofnięcie zamiany
+				currentSolution[i], currentSolution[j] = currentSolution[j], currentSolution[i]
 			}
 		}
 
 	case NeighborhoodInsert:
-		for i := 1; i < vertexCount-1; i++ {
-			for j := 1; j < vertexCount-1; j++ {
+		// Insert: przeniesienie wierzchołka z pozycji i na pozycję j
+		// Aby zminimalizować koszt kopiowania, zrobimy to za pomocą prostych operacji na slice.
+		for i := 1; i < vertexCount-2; i++ {
+			for j := 1; j < vertexCount-2; j++ {
 				if i == j {
 					continue
 				}
-				newPath := make([]int, vertexCount)
-				copy(newPath, currentPath)
-				// Przeniesienie wierzchołka z pozycji i do pozycji j
-				element := newPath[i]
-				copy(newPath[i:], newPath[i+1:])
-				newPath[j] = element
+				// Tymczasowo zmodyfikujemy currentSolution, aby uzyskać sąsiada
+				// Zapisz wartość elementu do przeniesienia
+				element := currentSolution[i]
 
-				c := t.calculateCost(newPath)
-				neighbors = append(neighbors, struct {
-					path []int
-					i, j int
-					cost int
-				}{path: newPath, i: i, j: j, cost: c})
+				if i < j {
+					// Przesuwamy wierzchołki w lewo
+					copy(currentSolution[i:], currentSolution[i+1:j+1])
+					currentSolution[j] = element
+				} else {
+					// i > j
+					// Przesuwamy wierzchołki w prawo
+					copy(currentSolution[j+1:i+1], currentSolution[j:i])
+					currentSolution[j] = element
+				}
+
+				cost := t.calculateCost(currentSolution)
+				isTabu := (tabuList[i][j] > 0 || tabuList[j][i] > 0)
+				if cost < bestNeighborCost && (!isTabu || cost < bestCost) {
+					bestNeighborCost = cost
+					if bestPath == nil {
+						bestPath = make([]int, vertexCount)
+					}
+					copy(bestPath, currentSolution)
+					bestI, bestJ = i, j
+				}
+
+				// Przywracamy oryginalną kolejność
+				if i < j {
+					// element był w i, przeniesiony do j
+					// cofamy zmianę
+					copy(currentSolution[i+1:j+1], currentSolution[i:j])
+					currentSolution[i] = element
+				} else {
+					// i > j
+					copy(currentSolution[j:i], currentSolution[j+1:i+1])
+					currentSolution[i] = element
+				}
 			}
 		}
 
 	default:
-		log.Printf("Nieznana metoda sąsiedztwa: %s. Domyślnie użyto 'swap'.\n", t.neighborhoodMethod)
-		// Fallback do swap
-		for i := 1; i < vertexCount-1; i++ {
-			for j := i + 1; j < vertexCount-1; j++ {
-				newPath := make([]int, vertexCount)
-				copy(newPath, currentPath)
-				newPath[i], newPath[j] = newPath[j], newPath[i]
+		// Domyślne podejście swap, jeśli coś jest nie tak
+		for i := 1; i < vertexCount-2; i++ {
+			for j := i + 1; j < vertexCount-2; j++ {
+				currentSolution[i], currentSolution[j] = currentSolution[j], currentSolution[i]
 
-				c := t.calculateCost(newPath)
-				neighbors = append(neighbors, struct {
-					path []int
-					i, j int
-					cost int
-				}{path: newPath, i: i, j: j, cost: c})
+				cost := t.calculateCost(currentSolution)
+				isTabu := (tabuList[i][j] > 0 || tabuList[j][i] > 0)
+				if cost < bestNeighborCost && (!isTabu || cost < bestCost) {
+					bestNeighborCost = cost
+					if bestPath == nil {
+						bestPath = make([]int, vertexCount)
+					}
+					copy(bestPath, currentSolution)
+					bestI, bestJ = i, j
+				}
+
+				currentSolution[i], currentSolution[j] = currentSolution[j], currentSolution[i]
 			}
 		}
 	}
 
-	return neighbors
+	return
 }
 
-// Solve implementuje algorytm Tabu Search dla problemu ATSP
 func (t *TsATSPSolver) Solve() ([]int, int) {
 	vertexCount := t.graph.GetVertexCount()
 	if vertexCount == 0 {
 		return nil, -1
 	}
 
-	// Start czasu
 	t.startTime = time.Now()
 
-	// Pobieramy początkowe rozwiązanie zachłanne
+	// Generujemy początkowe losowe rozwiązanie
 	currentSolution := t.graph.GetHamiltonianPathRandom(t.startVertex)
 	currentCost := t.calculateCost(currentSolution)
 
-	// Ustawiamy najlepsze rozwiązanie
 	bestSolution := make([]int, len(currentSolution))
 	copy(bestSolution, currentSolution)
 	bestCost := currentCost
 
-	// Tabu lista: przechowujemy czas tabu dla par indeksów (i,j)
 	tabuList := make([][]int, vertexCount)
 	for i := 0; i < vertexCount; i++ {
 		tabuList[i] = make([]int, vertexCount)
 	}
 
-	// Główna pętla Tabu Search
 	for iteration := 0; iteration < t.iterations; iteration++ {
-		// Sprawdzenie limitu czasu
+		// Sprawdzenie limitu czasu na początku każdej iteracji
 		if t.timeout != -1 {
 			elapsed := time.Since(t.startTime).Nanoseconds()
 			if elapsed >= t.timeout {
@@ -205,50 +208,17 @@ func (t *TsATSPSolver) Solve() ([]int, int) {
 			}
 		}
 
-		// Generujemy wszystkich sąsiadów
-		neighbors := t.getAllNeighbors(currentSolution)
-		if len(neighbors) == 0 {
-			// Brak sąsiadów, kończymy
+		// Znajdujemy najlepszego sąsiada
+		newSolution, bestI, bestJ, neighborCost := t.findBestNeighbor(currentSolution, tabuList, bestCost)
+
+		if newSolution == nil {
+			// Brak sąsiadów lub nie udało się poprawić, kończymy
 			break
 		}
 
-		// Wybór najlepszego sąsiada nie będącego tabu lub łamiącego tabu w przypadku poprawy globalnego optimum
-		var chosenNeighbor struct {
-			path []int
-			i, j int
-			cost int
-		}
-		chosenNeighbor.cost = math.MaxInt32
-
-		for _, neigh := range neighbors {
-			isTabu := (tabuList[neigh.i][neigh.j] > 0 || tabuList[neigh.j][neigh.i] > 0)
-			// Wybieramy najlepszego sąsiada:
-			// 1. Nie tabu i o minimalnym koszcie
-			// lub
-			// 2. Tabu, ale poprawia globalne optimum (aspiration criterion)
-			if neigh.cost < chosenNeighbor.cost {
-				if !isTabu || (isTabu && neigh.cost < bestCost) {
-					chosenNeighbor = neigh
-				}
-			}
-		}
-
-		// Jeśli nie znaleźliśmy lepszego sąsiada, wybieramy najlepszego tabu
-		if chosenNeighbor.cost == math.MaxInt32 {
-			// Wybieramy po prostu najlepszego sąsiada bez względu na tabu
-			bestNonImproving := neighbors[0]
-			for _, neigh := range neighbors {
-				if neigh.cost < bestNonImproving.cost {
-					bestNonImproving = neigh
-				}
-			}
-			chosenNeighbor = bestNonImproving
-		}
-
 		// Przejście do wybranego sąsiada
-		prevI, prevJ := chosenNeighbor.i, chosenNeighbor.j
-		currentSolution = chosenNeighbor.path
-		currentCost = chosenNeighbor.cost
+		copy(currentSolution, newSolution)
+		currentCost = neighborCost
 
 		// Aktualizacja najlepszego rozwiązania
 		if currentCost < bestCost {
@@ -257,11 +227,10 @@ func (t *TsATSPSolver) Solve() ([]int, int) {
 		}
 
 		// Aktualizacja listy tabu:
-		// Ruch (prevI, prevJ) jest tabu przez tabuTenure iteracji
-		tabuList[prevI][prevJ] = t.tabuTenure
-		tabuList[prevJ][prevI] = t.tabuTenure
+		tabuList[bestI][bestJ] = t.tabuTenure
+		tabuList[bestJ][bestI] = t.tabuTenure
 
-		// Zmniejszamy karencję tabu dla wszystkich ruchów
+		// Zmniejszanie karencji tabu
 		for i := 0; i < vertexCount; i++ {
 			for j := 0; j < vertexCount; j++ {
 				if tabuList[i][j] > 0 {

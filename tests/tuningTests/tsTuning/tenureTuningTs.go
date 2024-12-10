@@ -30,8 +30,9 @@ func runSingleGraphTenureTuning(g graph.Graph, tenures []int, timeoutInNs int64,
 	}
 
 	for i, ten := range tenures {
-		tsSolver := ts.NewTabuSearchATSPSolver(1000, timeoutInNs, ten, "swap")
+		tsSolver := ts.NewTabuSearchATSPSolver(3000, timeoutInNs, ten, "insert")
 		tsSolver.SetGraph(g)
+		tsSolver.SetStartVertex(0)
 		for j := 0; j < 10; j++ {
 			start := time.Now()
 			_, weight := tsSolver.Solve()

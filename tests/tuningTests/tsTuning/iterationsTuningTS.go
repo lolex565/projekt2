@@ -30,8 +30,9 @@ func runSingleGraphIterTuning(g graph.Graph, iterations []int, timeoutInNs int64
 	}
 
 	for i, it := range iterations {
-		tsSolver := ts.NewTabuSearchATSPSolver(it, timeoutInNs, 7, "swap")
+		tsSolver := ts.NewTabuSearchATSPSolver(it, timeoutInNs, 10, "insert")
 		tsSolver.SetGraph(g)
+		tsSolver.SetStartVertex(0)
 		for j := 0; j < 10; j++ {
 			start := time.Now()
 			_, weight := tsSolver.Solve()
