@@ -6,6 +6,6 @@ import (
 )
 
 func RunAmountTests() {
-	tsAmountTests.RunTSAmountTests(100, 50)
 	saAmountTests.RunSAAmountTests(100, 50)
+	tsAmountTests.RunTSAmountTests(100, 50)
 }

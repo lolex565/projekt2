@@ -12,7 +12,7 @@ import (
 func RunSAAmountTests(startVertexCount int, vertexCountStep int) {
 	vertexCount := startVertexCount
 	noEdgeValue := -1
-	timeoutInNs := utils.MinutesToNanoSeconds(5)
+	timeoutInNs := utils.SecondsToNanoSeconds(30)
 	saSolver := sa.NewSimulatedAnnealingATSPSolver(10000, 1e-9, 0.995, 1000, timeoutInNs)
 	saSolver.SetStartVertex(0)
 	results := make([][]int64, 0)

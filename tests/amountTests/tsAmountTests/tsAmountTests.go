@@ -12,8 +12,8 @@ import (
 func RunTSAmountTests(startVertexCount int, vertexCountStep int) {
 	vertexCount := startVertexCount
 	noEdgeValue := -1
-	timeoutInNs := utils.MinutesToNanoSeconds(5)
-	tsSolver := ts.NewTabuSearchATSPSolver(3000, timeoutInNs, 10, "insert")
+	timeoutInNs := utils.SecondsToNanoSeconds(30)
+	tsSolver := ts.NewTabuSearchATSPSolver(1000, timeoutInNs, 10, "insert")
 	tsSolver.SetStartVertex(0)
 	results := make([][]int64, 0)
 out:
