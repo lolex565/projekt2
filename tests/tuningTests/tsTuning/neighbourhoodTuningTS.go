@@ -29,7 +29,7 @@ func runSingleGraphNeighTuning(g graph.Graph, neighbours []string, timeoutInNs i
 	}
 
 	for i, neigh := range neighbours {
-		tsSolver := ts.NewTabuSearchATSPSolver(3000, timeoutInNs, 10, neigh)
+		tsSolver := ts.NewTabuSearchATSPSolver(1000, timeoutInNs, 10, neigh)
 		tsSolver.SetGraph(g)
 		tsSolver.SetStartVertex(0)
 		for j := 0; j < 10; j++ {
