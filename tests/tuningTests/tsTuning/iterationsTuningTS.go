@@ -12,7 +12,7 @@ import (
 
 func RunIterationsTuningTS() {
 	smallGraph, mediumGraph, largeGraph := tests.LoadTestGraphs()
-	iterations := []int{1000, 3000, 5000, 7000}
+	iterations := []int{1000, 2000, 3000}
 	timeoutInNs := utils.MinutesToNanoSeconds(2)
 	runSingleGraphIterTuning(smallGraph, iterations, timeoutInNs, "ts_iterations_small_")
 	runSingleGraphIterTuning(mediumGraph, iterations, timeoutInNs, "ts_iterations_medium_")

@@ -1,19 +1,23 @@
 package main
 
 import (
+	"flag"
+	"projekt2/menu"
 	"projekt2/tests/amountTests"
 	"projekt2/tests/tuningTests"
 )
 
 func main() {
-	//mainMenu := menu.NewMenu()
-	//mainMenu.RunInteractiveMenu()
 
-	//g := graph.NewAdjMatrixGraph(171, 100000000)
-	//graph.LoadGraphFromFile("ftv170.atsp", g, true)
-	//fmt.Println(g.ToString())
+	runInteractiveMenuPTR := flag.Bool("interactive", true, "Run interactive menu(default true)")
+	flag.Parse()
 
-	tuningTests.RunTuning()
-	amountTests.RunAmountTests()
+	if *runInteractiveMenuPTR {
+		mainMenu := menu.NewMenu()
+		mainMenu.RunInteractiveMenu()
+	} else {
+		tuningTests.RunTuning()
+		amountTests.RunAmountTests()
+	}
 
 }
