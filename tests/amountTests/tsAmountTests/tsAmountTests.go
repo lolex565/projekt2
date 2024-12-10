@@ -9,25 +9,23 @@ import (
 	"time"
 )
 
-func RunTSAmountTests(startVertexCount int, vertexCountStep int) {
-	vertexCount := startVertexCount
+func RunTSAmountTests(sizes []int) {
 	noEdgeValue := -1
 	timeoutInNs := utils.SecondsToNanoSeconds(30)
-	tsSolver := ts.NewTabuSearchATSPSolver(1000, timeoutInNs, 10, "insert")
+	tsSolver := ts.NewTabuSearchATSPSolver(1000, timeoutInNs, 10, "swap")
 	tsSolver.SetStartVertex(0)
 	results := make([][]int64, 0)
 out:
-	for {
+	for _, vertexCount := range sizes {
 		tempResults := make([]int64, 0)
-		for i := 0; i < 50; i++ {
+		for i := 0; i < 10; i++ {
 			g := graph.NewAdjMatrixGraph(vertexCount, noEdgeValue)
 			graph.GenerateRandomGraph(g, vertexCount, -1, 100)
 			tsSolver.SetGraph(g)
 			startTime := time.Now()
-			path, weight := tsSolver.Solve()
+			_, weight := tsSolver.Solve()
 			elapsed := time.Since(startTime)
 			log.Println("Wierzchołki:", vertexCount, "Czas:", elapsed, "Waga:", weight)
-			log.Println(g.PathWithWeightsToString(path))
 			if elapsed.Nanoseconds() > timeoutInNs {
 				log.Println("Testy przekraczają timeout, zatrzymano na ilości wierzchołków:", vertexCount)
 				break out
@@ -36,7 +34,6 @@ out:
 			runtime.GC()
 		}
 		results = append(results, tempResults)
-		vertexCount += vertexCountStep
 	}
 	utils.SaveTimesToCSVFile(results, "ts_amount_tests_"+utils.GetDateForFilename()+".csv")
 }

@@ -6,6 +6,7 @@ import (
 )
 
 func RunAmountTests() {
-	saAmountTests.RunSAAmountTests(100, 50)
-	tsAmountTests.RunTSAmountTests(100, 50)
+	sizes := []int{100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 800, 1000, 1200, 1600, 2000, 2400, 3200, 4000, 4800, 5600, 6400, 8000, 9600, 11200, 12800, 16000}
+	saAmountTests.RunSAAmountTests(sizes)
+	tsAmountTests.RunTSAmountTests(sizes)
 }
