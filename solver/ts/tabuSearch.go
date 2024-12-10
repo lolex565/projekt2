@@ -1,19 +1,27 @@
 package ts
 
 import (
+	"fmt"
 	"log"
 	"math"
 	"projekt2/graph"
 	"time"
 )
 
+const (
+	NeighborhoodSwap   = "swap"
+	NeighborhoodInsert = "insert"
+)
+
+// TsATSPSolver struktura solvera Tabu Search
 type TsATSPSolver struct {
-	graph       graph.Graph
-	startVertex int
-	iterations  int   // maksymalna liczba iteracji
-	timeout     int64 // limit czasu w nanosekundach (-1 oznacza brak limitu)
-	startTime   time.Time
-	tabuTenure  int // ile iteracji ruch pozostaje tabu
+	graph              graph.Graph
+	startVertex        int
+	iterations         int   // Maksymalna liczba iteracji
+	timeout            int64 // Limit czasu w nanosekundach (-1 oznacza brak limitu)
+	startTime          time.Time
+	tabuTenure         int    // Ile iteracji ruch pozostaje tabu
+	neighborhoodMethod string // Metoda sąsiedztwa: "swap" lub "insert"
 }
 
 // SetGraph ustawia graf dla solvera
@@ -41,15 +49,27 @@ func (t *TsATSPSolver) GetTimeout() int64 {
 	return t.timeout
 }
 
-// NewTabuSearchATSPSolver tworzy nowy solver z podanymi parametrami
-// iterations - maksymalna liczba iteracji
-// timeout - limit czasu w nanosekundach (-1 oznacza brak limitu)
-// tabuTenure - ile iteracji dany ruch pozostaje tabu
+// SetNeighborhoodMethod ustawia metodę sąsiedztwa
+func (t *TsATSPSolver) SetNeighborhoodMethod(method string) error {
+	if method != NeighborhoodSwap && method != NeighborhoodInsert {
+		return fmt.Errorf("nieprawidłowa metoda sąsiedztwa: %s", method)
+	}
+	t.neighborhoodMethod = method
+	return nil
+}
+
+// GetNeighborhoodMethod zwraca aktualnie ustawioną metodę sąsiedztwa
+func (t *TsATSPSolver) GetNeighborhoodMethod() string {
+	return t.neighborhoodMethod
+}
+
+// NewTabuSearchATSPSolver tworzy nowy solver Tabu Search z podanymi parametrami
 func NewTabuSearchATSPSolver(iterations int, timeout int64, tabuTenure int) TsATSPSolver {
 	return TsATSPSolver{
-		iterations: iterations,
-		timeout:    timeout,
-		tabuTenure: tabuTenure,
+		iterations:         iterations,
+		timeout:            timeout,
+		tabuTenure:         tabuTenure,
+		neighborhoodMethod: NeighborhoodSwap, // Domyślna metoda
 	}
 }
 
@@ -58,7 +78,7 @@ func (t *TsATSPSolver) calculateCost(path []int) int {
 	return t.graph.CalculatePathWeight(path)
 }
 
-// getAllNeighbors generuje wszystkie sąsiednie rozwiązania poprzez zamianę dwóch wierzchołków (oprócz startVertex na początku i końcu)
+// getAllNeighbors generuje wszystkie sąsiednie rozwiązania na podstawie wybranej metody sąsiedztwa
 func (t *TsATSPSolver) getAllNeighbors(currentPath []int) []struct {
 	path []int
 	i, j int
@@ -72,37 +92,80 @@ func (t *TsATSPSolver) getAllNeighbors(currentPath []int) []struct {
 	}{}
 
 	if vertexCount <= 3 {
-		// brak sensownych sąsiadów, bo tylko start, jeden wierzchołek i start
+		// Brak sensownych sąsiadów, bo tylko start, jeden wierzchołek i start
 		return neighbors
 	}
 
-	for i := 1; i < vertexCount-1; i++ {
-		for j := i + 1; j < vertexCount-1; j++ {
-			newPath := make([]int, vertexCount)
-			copy(newPath, currentPath)
-			// zamiana dwóch wierzchołków
-			newPath[i], newPath[j] = newPath[j], newPath[i]
+	switch t.neighborhoodMethod {
+	case NeighborhoodSwap:
+		for i := 1; i < vertexCount-1; i++ {
+			for j := i + 1; j < vertexCount-1; j++ {
+				newPath := make([]int, vertexCount)
+				copy(newPath, currentPath)
+				// Zamiana dwóch wierzchołków
+				newPath[i], newPath[j] = newPath[j], newPath[i]
 
-			c := t.calculateCost(newPath)
-			neighbors = append(neighbors, struct {
-				path []int
-				i, j int
-				cost int
-			}{path: newPath, i: i, j: j, cost: c})
+				c := t.calculateCost(newPath)
+				neighbors = append(neighbors, struct {
+					path []int
+					i, j int
+					cost int
+				}{path: newPath, i: i, j: j, cost: c})
+			}
+		}
+
+	case NeighborhoodInsert:
+		for i := 1; i < vertexCount-1; i++ {
+			for j := 1; j < vertexCount-1; j++ {
+				if i == j {
+					continue
+				}
+				newPath := make([]int, vertexCount)
+				copy(newPath, currentPath)
+				// Przeniesienie wierzchołka z pozycji i do pozycji j
+				element := newPath[i]
+				copy(newPath[i:], newPath[i+1:])
+				newPath[j] = element
+
+				c := t.calculateCost(newPath)
+				neighbors = append(neighbors, struct {
+					path []int
+					i, j int
+					cost int
+				}{path: newPath, i: i, j: j, cost: c})
+			}
+		}
+
+	default:
+		log.Printf("Nieznana metoda sąsiedztwa: %s. Domyślnie użyto 'swap'.\n", t.neighborhoodMethod)
+		// Fallback do swap
+		for i := 1; i < vertexCount-1; i++ {
+			for j := i + 1; j < vertexCount-1; j++ {
+				newPath := make([]int, vertexCount)
+				copy(newPath, currentPath)
+				newPath[i], newPath[j] = newPath[j], newPath[i]
+
+				c := t.calculateCost(newPath)
+				neighbors = append(neighbors, struct {
+					path []int
+					i, j int
+					cost int
+				}{path: newPath, i: i, j: j, cost: c})
+			}
 		}
 	}
 
 	return neighbors
 }
 
-// Solve - implementacja metody rozwiązywania problemu ATSP przy użyciu Tabu Search
+// Solve implementuje algorytm Tabu Search dla problemu ATSP
 func (t *TsATSPSolver) Solve() ([]int, int) {
 	vertexCount := t.graph.GetVertexCount()
 	if vertexCount == 0 {
 		return nil, -1
 	}
 
-	// start czasu
+	// Start czasu
 	t.startTime = time.Now()
 
 	// Pobieramy początkowe rozwiązanie zachłanne
@@ -114,8 +177,7 @@ func (t *TsATSPSolver) Solve() ([]int, int) {
 	copy(bestSolution, currentSolution)
 	bestCost := currentCost
 
-	// Tabu lista: będziemy przechowywać czas tabu dla par indeksów (i,j)
-	// Możemy użyć 2D slice, gdzie tabuList[i][j] > 0 oznacza, że ruch zamiany i,j jest tabu
+	// Tabu lista: przechowujemy czas tabu dla par indeksów (i,j)
 	tabuList := make([][]int, vertexCount)
 	for i := 0; i < vertexCount; i++ {
 		tabuList[i] = make([]int, vertexCount)
@@ -135,7 +197,7 @@ func (t *TsATSPSolver) Solve() ([]int, int) {
 		// Generujemy wszystkich sąsiadów
 		neighbors := t.getAllNeighbors(currentSolution)
 		if len(neighbors) == 0 {
-			// brak sąsiadów, kończymy
+			// Brak sąsiadów, kończymy
 			break
 		}
 
@@ -145,7 +207,7 @@ func (t *TsATSPSolver) Solve() ([]int, int) {
 			i, j int
 			cost int
 		}
-		chosenNeighbor.cost = math.MaxInt
+		chosenNeighbor.cost = math.MaxInt32
 
 		for _, neigh := range neighbors {
 			isTabu := (tabuList[neigh.i][neigh.j] > 0 || tabuList[neigh.j][neigh.i] > 0)
@@ -160,10 +222,9 @@ func (t *TsATSPSolver) Solve() ([]int, int) {
 			}
 		}
 
-		// Jeśli nie znaleźliśmy lepszego sąsiada, to znaczy wszyscy są tabu i żaden nie poprawia bestCost
-		// Wówczas wybieramy mimo wszystko najlepszego (nawet tabu), aby nie utknąć
-		if chosenNeighbor.cost == math.MaxInt {
-			// wybieramy po prostu najlepszego sąsiada bez względu na tabu
+		// Jeśli nie znaleźliśmy lepszego sąsiada, wybieramy najlepszego tabu
+		if chosenNeighbor.cost == math.MaxInt32 {
+			// Wybieramy po prostu najlepszego sąsiada bez względu na tabu
 			bestNonImproving := neighbors[0]
 			for _, neigh := range neighbors {
 				if neigh.cost < bestNonImproving.cost {
@@ -185,11 +246,11 @@ func (t *TsATSPSolver) Solve() ([]int, int) {
 		}
 
 		// Aktualizacja listy tabu:
-		//  - ruch (prevI, prevJ) jest tabu przez tabuTenure iteracji
+		// Ruch (prevI, prevJ) jest tabu przez tabuTenure iteracji
 		tabuList[prevI][prevJ] = t.tabuTenure
 		tabuList[prevJ][prevI] = t.tabuTenure
 
-		// Zmniejszamy karencje tabu dla wszystkich ruchów
+		// Zmniejszamy karencję tabu dla wszystkich ruchów
 		for i := 0; i < vertexCount; i++ {
 			for j := 0; j < vertexCount; j++ {
 				if tabuList[i][j] > 0 {

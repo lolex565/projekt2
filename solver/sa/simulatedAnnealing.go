@@ -114,7 +114,7 @@ func (s *SaATSPSolver) Solve() ([]int, int) {
 	T := s.initialTemperature
 
 	// Główna pętla symulowanego wyżarzania
-	for iteration := 0; iteration < s.iterations; iteration++ {
+	for T > s.minimalTemperature {
 		// Sprawdzenie limitu czasu
 		if s.timeout != -1 {
 			elapsed := time.Since(s.startTime).Nanoseconds()
@@ -124,37 +124,35 @@ func (s *SaATSPSolver) Solve() ([]int, int) {
 			}
 		}
 
-		// Generujemy sąsiada
-		newSolution := s.getNeighbor(currentSolution)
-		newCost := s.calculateCost(newSolution)
-		delta := newCost - currentCost
+		for iteration := 0; iteration < s.iterations; iteration++ {
+			// Generujemy sąsiada
+			newSolution := s.getNeighbor(currentSolution)
+			newCost := s.calculateCost(newSolution)
+			delta := newCost - currentCost
 
-		if delta < 0 {
-			// Lepsze rozwiązanie
-			currentSolution = newSolution
-			currentCost = newCost
-		} else {
-			// Gorsze rozwiązanie - sprawdzamy prawdopodobieństwo przyjęcia
-			ap := s.acceptanceProbability(delta, T)
-			chance := rand.Float64()
-			if chance < ap {
+			if delta < 0 {
+				// Lepsze rozwiązanie
 				currentSolution = newSolution
 				currentCost = newCost
+			} else {
+				// Gorsze rozwiązanie - sprawdzamy prawdopodobieństwo przyjęcia
+				ap := s.acceptanceProbability(delta, T)
+				chance := rand.Float64()
+				if chance < ap {
+					currentSolution = newSolution
+					currentCost = newCost
+				}
 			}
-		}
 
-		// Aktualizacja najlepszego znalezionego rozwiązania
-		if currentCost < bestCost {
-			bestCost = currentCost
-			copy(bestSolution, currentSolution)
+			// Aktualizacja najlepszego znalezionego rozwiązania
+			if currentCost < bestCost {
+				bestCost = currentCost
+				copy(bestSolution, currentSolution)
+			}
 		}
 
 		// Schładzanie temperatury
 		T *= s.alpha
-		if T < s.minimalTemperature {
-			log.Println("Temperatura spadła poniżej progu. Kończenie algorytmu.")
-			break
-		}
 	}
 
 	log.Println("Zakończono Symulowane Wyżarzanie. Najlepszy znaleziony koszt:", bestCost)
