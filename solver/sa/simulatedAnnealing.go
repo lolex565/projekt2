@@ -102,7 +102,7 @@ func (s *SaATSPSolver) Solve() ([]int, int) {
 	s.startTime = time.Now()
 
 	// Wygeneruj początkowe rozwiązanie metodą zachłanną
-	currentSolution := s.graph.GetHamiltonianPathGreedy(s.startVertex)
+	currentSolution := s.graph.GetHamiltonianPathRandom(s.startVertex)
 	currentCost := s.calculateCost(currentSolution)
 
 	// Ustawiamy najlepsze znane rozwiązanie

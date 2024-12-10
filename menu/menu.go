@@ -135,7 +135,7 @@ func (m *Menu) ConfigureSaSolver(initialTemperature float64, minimalTemperature 
 
 func (m *Menu) ConfigureTsSolver(iterations int, timeout int64, tabuTenure int, neighborhoodMethod string) {
 	// Inicjalizacja solvera Tabu Search
-	solver := ts.NewTabuSearchATSPSolver(iterations, timeout, tabuTenure)
+	solver := ts.NewTabuSearchATSPSolver(iterations, timeout, tabuTenure, neighborhoodMethod)
 	solver.SetGraph(m.graph)
 	solver.SetStartVertex(m.startVertex)
 

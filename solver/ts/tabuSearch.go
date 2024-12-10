@@ -64,13 +64,24 @@ func (t *TsATSPSolver) GetNeighborhoodMethod() string {
 }
 
 // NewTabuSearchATSPSolver tworzy nowy solver Tabu Search z podanymi parametrami
-func NewTabuSearchATSPSolver(iterations int, timeout int64, tabuTenure int) TsATSPSolver {
-	return TsATSPSolver{
-		iterations:         iterations,
-		timeout:            timeout,
-		tabuTenure:         tabuTenure,
-		neighborhoodMethod: NeighborhoodSwap, // Domyślna metoda
+// iterations - maksymalna liczba iteracji
+// timeout - limit czasu w nanosekundach (-1 oznacza brak limitu)
+// tabuTenure - ile iteracji ruch pozostaje tabu
+// neighborhoodMethod - metoda sąsiedztwa: "swap" lub "insert"
+func NewTabuSearchATSPSolver(iterations int, timeout int64, tabuTenure int, neighborhoodMethod string) TsATSPSolver {
+	solver := TsATSPSolver{
+		iterations: iterations,
+		timeout:    timeout,
+		tabuTenure: tabuTenure,
 	}
+
+	// Ustawienie metody sąsiedztwa za pomocą SetNeighborhoodMethod
+	if err := solver.SetNeighborhoodMethod(neighborhoodMethod); err != nil {
+		log.Printf("Nieprawidłowa metoda sąsiedztwa: %s. Użyto domyślnej metody '%s'.\n", neighborhoodMethod, NeighborhoodSwap)
+		solver.neighborhoodMethod = NeighborhoodSwap
+	}
+
+	return solver
 }
 
 // calculateCost oblicza koszt ścieżki, zakładając, że path już kończy się na startVertex
@@ -169,7 +180,7 @@ func (t *TsATSPSolver) Solve() ([]int, int) {
 	t.startTime = time.Now()
 
 	// Pobieramy początkowe rozwiązanie zachłanne
-	currentSolution := t.graph.GetHamiltonianPathGreedy(t.startVertex)
+	currentSolution := t.graph.GetHamiltonianPathRandom(t.startVertex)
 	currentCost := t.calculateCost(currentSolution)
 
 	// Ustawiamy najlepsze rozwiązanie

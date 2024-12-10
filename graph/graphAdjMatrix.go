@@ -2,6 +2,7 @@ package graph
 
 import (
 	"math"
+	"math/rand"
 	"strconv"
 	"strings"
 )
@@ -132,12 +133,12 @@ func (a *AdjMatrixGraph) PathWithWeightsToString(path []int) string {
 	return out.String()
 }
 
-func (a *AdjMatrixGraph) GetHamiltonianPathGreedy(starVertex int) []int {
+func (a *AdjMatrixGraph) GetHamiltonianPathGreedy(startVertex int) []int {
 	visited := make([]bool, a.GetVertexCount())
 	path := make([]int, 0)
-	path = append(path, starVertex)
-	visited[starVertex] = true
-	currentVertex := starVertex
+	path = append(path, startVertex)
+	visited[startVertex] = true
+	currentVertex := startVertex
 	for len(path) < a.GetVertexCount() {
 		minEdgeWeight := math.MaxInt
 		edgesFromCurrentVertex := a.GetEdgesFromVertex(currentVertex)
@@ -152,7 +153,29 @@ func (a *AdjMatrixGraph) GetHamiltonianPathGreedy(starVertex int) []int {
 		currentVertex = nextVertex
 		visited[currentVertex] = true
 	}
-	path = append(path, starVertex)
+	path = append(path, startVertex)
+	return path
+}
+
+func (a *AdjMatrixGraph) GetHamiltonianPathRandom(startVertex int) []int {
+	visited := make([]bool, a.GetVertexCount())
+	path := make([]int, 0)
+	path = append(path, startVertex)
+	visited[startVertex] = true
+	currentVertex := startVertex
+	for len(path) < a.GetVertexCount() {
+		nextVertex := -1
+		for {
+			nextVertex = rand.Int() % a.GetVertexCount()
+			if !visited[nextVertex] {
+				break
+			}
+		}
+		path = append(path, nextVertex)
+		currentVertex = nextVertex
+		visited[currentVertex] = true
+	}
+	path = append(path, startVertex)
 	return path
 }
 

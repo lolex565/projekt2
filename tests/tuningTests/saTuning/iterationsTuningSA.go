@@ -1,22 +1,23 @@
-package tsTuning
+package saTuning
 
 import (
 	"log"
 	"projekt2/graph"
-	"projekt2/solver/ts"
+	"projekt2/solver/sa"
+
 	"projekt2/tests"
 	"projekt2/utils"
 	"strconv"
 	"time"
 )
 
-func RunIterationsTuningTS() {
+func RunIterationsTuningSA() {
 	smallGraph, mediumGraph, largeGraph := tests.LoadTestGraphs()
-	iterations := []int{1000, 3000, 5000, 7000}
+	iterations := []int{1000, 3000, 5000}
 	timeoutInNs := utils.MinutesToNanoSeconds(2)
-	runSingleGraphIterTuning(smallGraph, iterations, timeoutInNs, "ts_iterations_small_")
-	runSingleGraphIterTuning(mediumGraph, iterations, timeoutInNs, "ts_iterations_medium_")
-	runSingleGraphIterTuning(largeGraph, iterations, timeoutInNs, "ts_iterations_large_")
+	runSingleGraphIterTuning(smallGraph, iterations, timeoutInNs, "sa_iterations_small_")
+	runSingleGraphIterTuning(mediumGraph, iterations, timeoutInNs, "sa_iterations_medium_")
+	runSingleGraphIterTuning(largeGraph, iterations, timeoutInNs, "sa_iterations_large_")
 }
 
 func runSingleGraphIterTuning(g graph.Graph, iterations []int, timeoutInNs int64, fileOutName string) {
@@ -30,11 +31,11 @@ func runSingleGraphIterTuning(g graph.Graph, iterations []int, timeoutInNs int64
 	}
 
 	for i, it := range iterations {
-		tsSolver := ts.NewTabuSearchATSPSolver(it, timeoutInNs, 7, "swap")
-		tsSolver.SetGraph(g)
+		saSolver := sa.NewSimulatedAnnealingATSPSolver(10000, 1e-9, 0.995, it, timeoutInNs)
+		saSolver.SetGraph(g)
 		for j := 0; j < 10; j++ {
 			start := time.Now()
-			_, weight := tsSolver.Solve()
+			_, weight := saSolver.Solve()
 			elapsed := time.Since(start)
 			log.Println("Iteration: ", it, " Time: ", elapsed, " Weight: ", weight, " Graph size: ", g.GetVertexCount())
 			results[i][0][j] = elapsed.Nanoseconds()

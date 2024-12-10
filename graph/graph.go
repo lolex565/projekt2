@@ -16,5 +16,6 @@ type Graph interface {
 	CalculatePathWeight(path []int) int
 	PathWithWeightsToString(path []int) string
 	GetHamiltonianPathGreedy(startVertex int) []int
+	GetHamiltonianPathRandom(startVertex int) []int
 	ToString() string
 }
