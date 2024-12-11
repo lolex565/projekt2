@@ -12,7 +12,7 @@ import (
 func RunNeighbourTuningTS() {
 	smallGraph, mediumGraph, largeGraph := tests.LoadTestGraphs()
 	neighbours := []string{"swap", "insert"}
-	timeoutInNs := utils.MinutesToNanoSeconds(2)
+	timeoutInNs := utils.MinutesToNanoSeconds(5)
 	runSingleGraphNeighTuning(smallGraph, neighbours, timeoutInNs, "ts_neighbours_small_")
 	runSingleGraphNeighTuning(mediumGraph, neighbours, timeoutInNs, "ts_neighbours_medium_")
 	runSingleGraphNeighTuning(largeGraph, neighbours, timeoutInNs, "ts_neighbours_large_")

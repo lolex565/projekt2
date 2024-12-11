@@ -11,14 +11,14 @@ import (
 
 func RunTSAmountTests(sizes []int) {
 	noEdgeValue := -1
-	timeoutInNs := utils.SecondsToNanoSeconds(30)
+	timeoutInNs := utils.SecondsToNanoSeconds(60)
 	tsSolver := ts.NewTabuSearchATSPSolver(1000, timeoutInNs, 10, "swap")
 	tsSolver.SetStartVertex(0)
 	results := make([][]int64, 0)
 out:
 	for _, vertexCount := range sizes {
 		tempResults := make([]int64, 0)
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 100; i++ {
 			g := graph.NewAdjMatrixGraph(vertexCount, noEdgeValue)
 			graph.GenerateRandomGraph(g, vertexCount, -1, 100)
 			tsSolver.SetGraph(g)

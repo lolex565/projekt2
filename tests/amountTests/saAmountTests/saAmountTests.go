@@ -11,14 +11,14 @@ import (
 
 func RunSAAmountTests(sizes []int) {
 	noEdgeValue := -1
-	timeoutInNs := utils.SecondsToNanoSeconds(30)
-	saSolver := sa.NewSimulatedAnnealingATSPSolver(10000, 1e-3, 0.95, 1000, timeoutInNs)
+	timeoutInNs := utils.SecondsToNanoSeconds(60)
+	saSolver := sa.NewSimulatedAnnealingATSPSolver(1000000, 1e-9, 0.995, 1000, timeoutInNs)
 	saSolver.SetStartVertex(0)
 	results := make([][]int64, 0)
 out:
 	for _, vertexCount := range sizes {
 		tempResults := make([]int64, 0)
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 100; i++ {
 			g := graph.NewAdjMatrixGraph(vertexCount, noEdgeValue)
 			graph.GenerateRandomGraph(g, vertexCount, -1, 100)
 			saSolver.SetGraph(g)

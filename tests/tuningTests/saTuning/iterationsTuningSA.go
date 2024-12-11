@@ -14,7 +14,7 @@ import (
 func RunIterationsTuningSA() {
 	smallGraph, mediumGraph, largeGraph := tests.LoadTestGraphs()
 	iterations := []int{1000, 3000, 5000}
-	timeoutInNs := utils.MinutesToNanoSeconds(2)
+	timeoutInNs := utils.MinutesToNanoSeconds(5)
 	runSingleGraphIterTuning(smallGraph, iterations, timeoutInNs, "sa_iterations_small_")
 	runSingleGraphIterTuning(mediumGraph, iterations, timeoutInNs, "sa_iterations_medium_")
 	runSingleGraphIterTuning(largeGraph, iterations, timeoutInNs, "sa_iterations_large_")

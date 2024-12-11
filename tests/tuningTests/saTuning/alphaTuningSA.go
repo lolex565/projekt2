@@ -14,7 +14,7 @@ import (
 func RunAlphaTuningSA() {
 	smallGraph, mediumGraph, largeGraph := tests.LoadTestGraphs()
 	alphas := []float64{0.9, 0.95, 0.99, 0.995}
-	timeoutInNs := utils.MinutesToNanoSeconds(2)
+	timeoutInNs := utils.MinutesToNanoSeconds(5)
 	runSingleGraphAlphaTuning(smallGraph, alphas, timeoutInNs, "sa_alpha_small_")
 	runSingleGraphAlphaTuning(mediumGraph, alphas, timeoutInNs, "sa_alpha_medium_")
 	runSingleGraphAlphaTuning(largeGraph, alphas, timeoutInNs, "sa_alpha_large_")
@@ -31,7 +31,7 @@ func runSingleGraphAlphaTuning(g graph.Graph, alphas []float64, timeoutInNs int6
 	}
 
 	for i, alpha := range alphas {
-		saSolver := sa.NewSimulatedAnnealingATSPSolver(10000, 1e-9, alpha, 1000, timeoutInNs)
+		saSolver := sa.NewSimulatedAnnealingATSPSolver(10000, 1e-9, alpha, 5000, timeoutInNs)
 		saSolver.SetGraph(g)
 		saSolver.SetStartVertex(0)
 		for j := 0; j < 10; j++ {

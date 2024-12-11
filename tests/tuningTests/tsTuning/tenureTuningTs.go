@@ -13,7 +13,7 @@ import (
 func RunTenureTuningTS() {
 	smallGraph, mediumGraph, largeGraph := tests.LoadTestGraphs()
 	tenures := []int{5, 10, 15}
-	timeoutInNs := utils.MinutesToNanoSeconds(2)
+	timeoutInNs := utils.MinutesToNanoSeconds(5)
 	runSingleGraphTenureTuning(smallGraph, tenures, timeoutInNs, "ts_tenure_small_")
 	runSingleGraphTenureTuning(mediumGraph, tenures, timeoutInNs, "ts_tenure_medium_")
 	runSingleGraphTenureTuning(largeGraph, tenures, timeoutInNs, "ts_tenure_large_")
