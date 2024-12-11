@@ -31,7 +31,7 @@ func runSingleGraphTS(g graph.Graph, timeoutInNs int64, fileOutName string) {
 		results[i] = make([]int64, 10)
 	}
 
-	tsSolver := ts.NewTabuSearchATSPSolver(2000, timeoutInNs, 10, "insert")
+	tsSolver := ts.NewTabuSearchATSPSolver(1000, timeoutInNs, 10, "insert")
 	tsSolver.SetGraph(g)
 	tsSolver.SetStartVertex(0)
 	for i := 0; i < 10; i++ {

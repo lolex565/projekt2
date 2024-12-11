@@ -32,7 +32,15 @@ type Menu struct {
 
 // NewMenu tworzy nową instancję menu bez grafu
 func NewMenu() *Menu {
-	return &Menu{}
+	return &Menu{
+		startVertex:   0,
+		bfATSPSolver:  bf.BFATSPSolver{},
+		bnbATSPSolver: bnb.BNBATSPSolver{},
+		dpATSPSolver:  dp.DPATSPSolver{},
+		grATSPSolver:  gr.GRATSPSolver{},
+		saATSPSolver:  sa.SaATSPSolver{},
+		tsATSPSolver:  ts.TsATSPSolver{},
+	}
 }
 
 // NewDefaultMenu tworzy nową instancję menu z podanym grafem
@@ -45,6 +53,12 @@ func NewDefaultMenu(g graph.Graph) *Menu {
 // SetGraph ustawia graf
 func (m *Menu) SetGraph(g graph.Graph) {
 	m.graph = g
+	m.bnbATSPSolver.SetGraph(g)
+	m.bfATSPSolver.SetGraph(g)
+	m.dpATSPSolver.SetGraph(g)
+	m.grATSPSolver.SetGraph(g)
+	m.saATSPSolver.SetGraph(g)
+	m.tsATSPSolver.SetGraph(g)
 }
 
 // Graph zwraca aktualny graf

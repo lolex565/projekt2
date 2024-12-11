@@ -73,7 +73,7 @@ func (t *TsATSPSolver) calculateCost(path []int) int {
 	return t.graph.CalculatePathWeight(path)
 }
 
-// findBestNeighbor znajduje najlepszego sąsiada (zgodnie z metodą sąsiedztwa) bez tworzenia pełnej listy
+// findBestNeighbor znajduje najlepszego sąsiada (zgodnie z metodą sąsiedztwa)
 func (t *TsATSPSolver) findBestNeighbor(currentSolution []int, tabuList [][]int, bestCost int) (bestPath []int, bestI, bestJ, bestNeighborCost int) {
 	vertexCount := len(currentSolution)
 	bestNeighborCost = math.MaxInt32
@@ -81,8 +81,8 @@ func (t *TsATSPSolver) findBestNeighbor(currentSolution []int, tabuList [][]int,
 	switch t.neighborhoodMethod {
 	case NeighborhoodSwap:
 		// Swap: zamiana par wierzchołków
-		for i := 1; i < vertexCount-2; i++ {
-			for j := i + 1; j < vertexCount-2; j++ {
+		for i := 1; i < vertexCount-1; i++ {
+			for j := i + 1; j < vertexCount-1; j++ {
 				// Zamiana
 				currentSolution[i], currentSolution[j] = currentSolution[j], currentSolution[i]
 
@@ -106,9 +106,8 @@ func (t *TsATSPSolver) findBestNeighbor(currentSolution []int, tabuList [][]int,
 
 	case NeighborhoodInsert:
 		// Insert: przeniesienie wierzchołka z pozycji i na pozycję j
-		// Aby zminimalizować koszt kopiowania, zrobimy to za pomocą prostych operacji na slice.
-		for i := 1; i < vertexCount-2; i++ {
-			for j := 1; j < vertexCount-2; j++ {
+		for i := 1; i < vertexCount-1; i++ {
+			for j := 1; j < vertexCount-1; j++ {
 				if i == j {
 					continue
 				}
