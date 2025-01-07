@@ -153,8 +153,8 @@ func (t *TsATSPSolver) findBestNeighbor(currentSolution []int, tabuList [][]int,
 
 	default:
 		// Domyślne podejście swap, jeśli coś jest nie tak
-		for i := 1; i < vertexCount-2; i++ {
-			for j := i + 1; j < vertexCount-2; j++ {
+		for i := 1; i < vertexCount-1; i++ {
+			for j := i + 1; j < vertexCount-1; j++ {
 				currentSolution[i], currentSolution[j] = currentSolution[j], currentSolution[i]
 
 				cost := t.calculateCost(currentSolution)

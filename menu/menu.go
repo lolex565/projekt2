@@ -168,8 +168,7 @@ func (m *Menu) printSolution(path []int, cost int) {
 		fmt.Println("Nie znaleziono rozwiązania.")
 		return
 	}
-	fmt.Println("Znaleziono ścieżkę:", path)
-	fmt.Println("Jej koszt:", cost)
+	fmt.Println("Koszt:", cost)
 	if m.graph != nil {
 		fmt.Println("Ścieżka ze szczegółami wag:", m.graph.PathWithWeightsToString(path))
 	}
